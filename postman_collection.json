@@ -1,0 +1,538 @@
+{
+  "info": {
+    "name": "Warehouse & Inventory Management System",
+    "description": "P11 - Supply Chain domain. Import this collection, run 'Register Admin' then 'Login Admin' first (token auto-saves to the collection variable {{adminToken}}), then work through the folders top to bottom.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "adminToken", "value": "" },
+    { "key": "managerToken", "value": "" },
+    { "key": "staffToken", "value": "" },
+    { "key": "warehouseAId", "value": "" },
+    { "key": "warehouseBId", "value": "" },
+    { "key": "itemId", "value": "" },
+    { "key": "transferId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Register Admin",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 201) {",
+              "  const data = pm.response.json().data;",
+              "  pm.collectionVariables.set('adminToken', data.token);",
+              "}"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ashwin Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"Password123\",\n  \"role\": \"admin\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Manager",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 201) {",
+              "  const data = pm.response.json().data;",
+              "  pm.collectionVariables.set('managerToken', data.token);",
+              "}"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meera Manager\",\n  \"email\": \"manager@example.com\",\n  \"password\": \"Password123\",\n  \"role\": \"manager\",\n  \"warehouseId\": \"{{warehouseAId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register Staff",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 201) {",
+              "  const data = pm.response.json().data;",
+              "  pm.collectionVariables.set('staffToken', data.token);",
+              "}"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Suresh Staff\",\n  \"email\": \"staff@example.com\",\n  \"password\": \"Password123\",\n  \"role\": \"staff\",\n  \"warehouseId\": \"{{warehouseAId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 200) {",
+              "  const data = pm.response.json().data;",
+              "  pm.collectionVariables.set('adminToken', data.token);",
+              "}"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User (me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Login - Validation Failure (missing password)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Warehouses",
+      "item": [
+        {
+          "name": "Create Warehouse A (admin)",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 201) {",
+              "  pm.collectionVariables.set('warehouseAId', pm.response.json().data._id);",
+              "}"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/warehouses",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"North Depot\",\n  \"location\": \"Bengaluru North\",\n  \"capacity\": 5000\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Warehouse B (admin)",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 201) {",
+              "  pm.collectionVariables.set('warehouseBId', pm.response.json().data._id);",
+              "}"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/warehouses",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"South Depot\",\n  \"location\": \"Bengaluru South\",\n  \"capacity\": 3000\n}"
+            }
+          }
+        },
+        {
+          "name": "List Warehouses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/warehouses"
+          }
+        },
+        {
+          "name": "Get Warehouse By Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/warehouses/{{warehouseAId}}"
+          }
+        },
+        {
+          "name": "Update Warehouse",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/warehouses/{{warehouseAId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"capacity\": 6000\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Warehouse - Forbidden as Staff (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "url": "{{baseUrl}}/warehouses",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Should Fail\",\n  \"location\": \"X\",\n  \"capacity\": 100\n}"
+            }
+          }
+        },
+        {
+          "name": "List Warehouses - No Token (401)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/warehouses"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Items",
+      "item": [
+        {
+          "name": "Create Item (admin)",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 201) {",
+              "  pm.collectionVariables.set('itemId', pm.response.json().data._id);",
+              "}"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"WGT-001\",\n  \"name\": \"Standard Widget\",\n  \"category\": \"Widgets\",\n  \"unit\": \"pcs\",\n  \"unitPrice\": 50,\n  \"reorderPoint\": 20\n}"
+            }
+          }
+        },
+        {
+          "name": "List Items",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/items"
+          }
+        },
+        {
+          "name": "Get Item By Id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/items/{{itemId}}"
+          }
+        },
+        {
+          "name": "Update Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/items/{{itemId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unitPrice\": 55\n}"
+            }
+          }
+        },
+        {
+          "name": "Low Stock Items",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/items/low-stock"
+          }
+        },
+        {
+          "name": "Create Item - Validation Failure (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "url": "{{baseUrl}}/items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"\",\n  \"name\": \"\",\n  \"category\": \"\",\n  \"unit\": \"\",\n  \"unitPrice\": -5\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Item - Not Found (404)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/items/64f1a2b3c4d5e6f7a8b9c0d1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Stock In/Out",
+      "item": [
+        {
+          "name": "Stock In (staff)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "url": "{{baseUrl}}/stock/in",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"warehouseId\": \"{{warehouseAId}}\",\n  \"itemId\": \"{{itemId}}\",\n  \"quantity\": 100,\n  \"batchNumber\": \"BATCH-001\",\n  \"notes\": \"Initial stock intake\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Stock Out (staff)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "url": "{{baseUrl}}/stock/out",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"warehouseId\": \"{{warehouseAId}}\",\n  \"itemId\": \"{{itemId}}\",\n  \"quantity\": 30,\n  \"reference\": \"SALE-1001\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Stock Out - Insufficient Stock (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "url": "{{baseUrl}}/stock/out",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"warehouseId\": \"{{warehouseAId}}\",\n  \"itemId\": \"{{itemId}}\",\n  \"quantity\": 999999\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Balances",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/balances?warehouseId={{warehouseAId}}&itemId={{itemId}}"
+          }
+        },
+        {
+          "name": "Movement History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/movements?warehouseId={{warehouseAId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Transfers",
+      "item": [
+        {
+          "name": "Create Transfer Request (staff)",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "if (pm.response.code === 201) {",
+              "  pm.collectionVariables.set('transferId', pm.response.json().data._id);",
+              "}"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "url": "{{baseUrl}}/transfers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromWarehouseId\": \"{{warehouseAId}}\",\n  \"toWarehouseId\": \"{{warehouseBId}}\",\n  \"itemId\": \"{{itemId}}\",\n  \"quantity\": 20\n}"
+            }
+          }
+        },
+        {
+          "name": "List Transfer Requests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/transfers"
+          }
+        },
+        {
+          "name": "Approve Transfer (manager)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{managerToken}}" }
+            ],
+            "url": "{{baseUrl}}/transfers/{{transferId}}/decision",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"remarks\": \"Reviewed and confirmed by authorized role\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Decide Transfer - Forbidden as Staff (403)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{staffToken}}" }
+            ],
+            "url": "{{baseUrl}}/transfers/{{transferId}}/decision",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Decide Transfer - Already Decided (409)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{managerToken}}" }
+            ],
+            "url": "{{baseUrl}}/transfers/{{transferId}}/decision",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"rejected\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Adjustments",
+      "item": [
+        {
+          "name": "Create Adjustment - Damage (manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{managerToken}}" }
+            ],
+            "url": "{{baseUrl}}/adjustments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"warehouseId\": \"{{warehouseAId}}\",\n  \"itemId\": \"{{itemId}}\",\n  \"quantityDelta\": -5,\n  \"reasonCode\": \"damage\",\n  \"notes\": \"Box dropped during handling\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Adjustments",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/adjustments?warehouseId={{warehouseAId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Reports (Manager/Admin)",
+      "item": [
+        {
+          "name": "Stock Valuation Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/reports/valuation"
+          }
+        },
+        {
+          "name": "Fast-Moving Items Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/reports/fast-moving?days=30&limit=10"
+          }
+        },
+        {
+          "name": "Warehouse-Wise Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/reports/warehouse-wise"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Health Check",
+      "item": [
+        {
+          "name": "API Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    }
+  ]
+}
